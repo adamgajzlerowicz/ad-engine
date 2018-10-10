@@ -1593,7 +1593,7 @@ var availableVideoPositions = ['preroll', 'midroll', 'postroll'],
 function getCustomParameters(slot) {
 	var extraTargeting = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-	var params = assign_default()({}, context.get('targeting'), slot.getTargeting(), extraTargeting);
+	var params = assign_default()({}, context.get('targeting'), slot.targeting, extraTargeting);
 
 	return encodeURIComponent(keys_default()(params).filter(function (key) {
 		return params[key];
@@ -1650,14 +1650,8 @@ function getOverriddenVast() {
 	return null;
 }
 
-function createRequest(params) {
-	var adSlot = slotService.get(params.slotName),
-	    adsRequest = new window.google.ima.AdsRequest(),
-	    overriddenVast = getOverriddenVast();
-
-	if (params.vastResponse || overriddenVast) {
-		adsRequest.adsResponse = overriddenVast || params.vastResponse;
-	}
+function updateSlotStatus(params) {
+	var adSlot = slotService.get(params.slotName);
 
 	// DEPRECATED: options.porvata.audio.segment
 	var segment = context.get('options.porvata.audio.segment');
@@ -1667,9 +1661,19 @@ function createRequest(params) {
 
 	adSlot.setConfigProperty('autoplay', params.autoPlay);
 	adSlot.setConfigProperty('audio', !params.autoPlay);
-	adSlot.setConfigProperty('targeting.autoplay', params.autoPlay ? 'yes' : 'no');
+	adSlot.setConfigProperty('targeting.ctp', !params.autoPlay ? 'yes' : 'no');
 	adSlot.setConfigProperty('targeting.audio', !params.autoPlay ? 'yes' : 'no');
+}
 
+function createRequest(params) {
+	var adsRequest = new window.google.ima.AdsRequest(),
+	    overriddenVast = getOverriddenVast();
+
+	if (params.vastResponse || overriddenVast) {
+		adsRequest.adsResponse = overriddenVast || params.vastResponse;
+	}
+
+	updateSlotStatus(params);
 	adsRequest.adTagUrl = params.vastUrl || buildVastUrl(params.width / params.height, params.slotName, {
 		targeting: params.vastTargeting
 	});
@@ -1698,7 +1702,8 @@ function getRenderingSettings() {
 
 var googleImaSetup = {
 	createRequest: createRequest,
-	getRenderingSettings: getRenderingSettings
+	getRenderingSettings: getRenderingSettings,
+	updateSlotStatus: updateSlotStatus
 };
 // CONCATENATED MODULE: ./src/ad-engine/video/player/porvata/moat/moat-video-tracker-script.js
 // Fixes for MOAT script incompatibility
@@ -2088,6 +2093,7 @@ var video_settings_VideoSettings = function () {
 
 
 
+
 var VIDEO_FULLSCREEN_CLASS_NAME = 'video-player-fullscreen';
 var STOP_SCROLLING_CLASS_NAME = 'stop-scrolling';
 
@@ -2366,8 +2372,7 @@ var porvata_Porvata = function () {
 			var porvataListener = new porvata_listener_PorvataListener({
 				adProduct: params.adProduct,
 				position: params.slotName,
-				src: params.src,
-				withAudio: !params.autoPlay
+				src: params.src
 			});
 
 			var isFirstPlay = true,
@@ -2389,6 +2394,7 @@ var porvata_Porvata = function () {
 
 			var videoSettings = new video_settings_VideoSettings(params);
 
+			googleImaSetup.updateSlotStatus(params);
 			porvataListener.init();
 
 			return googleIma.load().then(function () {
@@ -2439,7 +2445,6 @@ var porvata_Porvata = function () {
 						viewportListenerId = null;
 					}
 					isFirstPlay = false;
-					porvataListener.params.withAudio = true;
 				});
 				video.addEventListener('wikiaAdRestart', function () {
 					isFirstPlay = false;
@@ -2707,7 +2712,10 @@ var porvata_listener_PorvataListener = function () {
 				lineItemId = this.video.container.getAttribute('data-vast-line-item-id');
 			}
 
-			return {
+			var position = this.params.position ? this.params.position.toLowerCase() : '(none)';
+			var slot = slotService.get(position);
+
+			var data = {
 				ad_error_code: errorCode,
 				ad_product: this.params.adProduct,
 				browser: client.getOperatingSystem() + ' ' + client.getBrowser(),
@@ -2716,10 +2724,16 @@ var porvata_listener_PorvataListener = function () {
 				event_name: eventName,
 				line_item_id: lineItemId || 0,
 				player: PorvataListener.PLAYER_NAME,
-				position: this.params.position ? this.params.position.toLowerCase() : '(none)',
-				timestamp: new Date().getTime(),
-				audio: this.params.withAudio ? 1 : 0
+				position: position,
+				timestamp: new Date().getTime()
 			};
+
+			if (slot) {
+				data.audio = slot.getConfigProperty('audio') ? 1 : 0;
+				data.ctp = slot.getConfigProperty('autoplay') ? 0 : 1;
+			}
+
+			return data;
 		}
 	}]);
 
