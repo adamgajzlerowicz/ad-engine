@@ -5,7 +5,7 @@ const availableVideoPositions = ['preroll', 'midroll', 'postroll'],
 	correlator = Math.round(Math.random() * 10000000000);
 
 function getCustomParameters(slot, extraTargeting = {}) {
-	const params = Object.assign({}, context.get('targeting'), slot.getTargeting(), extraTargeting);
+	const params = Object.assign({}, context.get('targeting'), slot.targeting, extraTargeting);
 
 	return encodeURIComponent(
 		Object.keys(params)

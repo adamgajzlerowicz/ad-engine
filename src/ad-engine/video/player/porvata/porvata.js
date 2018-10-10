@@ -1,4 +1,5 @@
 import { googleIma } from './ima/google-ima';
+import { googleImaSetup } from './ima/google-ima-setup';
 import { PorvataListener } from '../../../listeners';
 import { VideoSettings } from './video-settings';
 import { client, viewportObserver, tryProperty, whichProperty } from '../../../utils';
@@ -240,8 +241,7 @@ export class Porvata {
 		const porvataListener = new PorvataListener({
 			adProduct: params.adProduct,
 			position: params.slotName,
-			src: params.src,
-			withAudio: !params.autoPlay
+			src: params.src
 		});
 
 		let isFirstPlay = true,
@@ -263,6 +263,7 @@ export class Porvata {
 
 		const videoSettings = new VideoSettings(params);
 
+		googleImaSetup.updateSlotStatus(params);
 		porvataListener.init();
 
 		return googleIma.load()
@@ -312,7 +313,6 @@ export class Porvata {
 						viewportListenerId = null;
 					}
 					isFirstPlay = false;
-					porvataListener.params.withAudio = true;
 				});
 				video.addEventListener('wikiaAdRestart', () => {
 					isFirstPlay = false;

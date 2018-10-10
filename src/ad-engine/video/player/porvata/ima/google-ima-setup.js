@@ -15,14 +15,8 @@ function getOverriddenVast() {
 	return null;
 }
 
-function createRequest(params) {
-	const adSlot = slotService.get(params.slotName),
-		adsRequest = new window.google.ima.AdsRequest(),
-		overriddenVast = getOverriddenVast();
-
-	if (params.vastResponse || overriddenVast) {
-		adsRequest.adsResponse = overriddenVast || params.vastResponse;
-	}
+function updateSlotStatus(params) {
+	const adSlot = slotService.get(params.slotName);
 
 	// DEPRECATED: options.porvata.audio.segment
 	const segment = context.get('options.porvata.audio.segment');
@@ -32,9 +26,19 @@ function createRequest(params) {
 
 	adSlot.setConfigProperty('autoplay', params.autoPlay);
 	adSlot.setConfigProperty('audio', !params.autoPlay);
-	adSlot.setConfigProperty('targeting.autoplay', params.autoPlay ? 'yes' : 'no');
+	adSlot.setConfigProperty('targeting.ctp', !params.autoPlay ? 'yes' : 'no');
 	adSlot.setConfigProperty('targeting.audio', !params.autoPlay ? 'yes' : 'no');
+}
 
+function createRequest(params) {
+	const adsRequest = new window.google.ima.AdsRequest(),
+		overriddenVast = getOverriddenVast();
+
+	if (params.vastResponse || overriddenVast) {
+		adsRequest.adsResponse = overriddenVast || params.vastResponse;
+	}
+
+	updateSlotStatus(params);
 	adsRequest.adTagUrl = params.vastUrl || buildVastUrl(params.width / params.height, params.slotName, {
 		targeting: params.vastTargeting
 	});
@@ -61,5 +65,6 @@ function getRenderingSettings(params = {}) {
 
 export const googleImaSetup = {
 	createRequest,
-	getRenderingSettings
+	getRenderingSettings,
+	updateSlotStatus
 };

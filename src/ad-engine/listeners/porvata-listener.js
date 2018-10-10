@@ -77,7 +77,10 @@ export class PorvataListener {
 			lineItemId = this.video.container.getAttribute('data-vast-line-item-id');
 		}
 
-		return {
+		const position = this.params.position ? this.params.position.toLowerCase() : '(none)';
+		const slot = slotService.get(position);
+
+		const data = {
 			ad_error_code: errorCode,
 			ad_product: this.params.adProduct,
 			browser: `${client.getOperatingSystem()} ${client.getBrowser()}`,
@@ -86,9 +89,15 @@ export class PorvataListener {
 			event_name: eventName,
 			line_item_id: lineItemId || 0,
 			player: PorvataListener.PLAYER_NAME,
-			position: this.params.position ? this.params.position.toLowerCase() : '(none)',
-			timestamp: new Date().getTime(),
-			audio: this.params.withAudio ? 1 : 0
+			position,
+			timestamp: new Date().getTime()
 		};
+
+		if (slot) {
+			data.audio = slot.getConfigProperty('audio') ? 1 : 0;
+			data.ctp = slot.getConfigProperty('autoplay') ? 0 : 1;
+		}
+
+		return data;
 	}
 }
