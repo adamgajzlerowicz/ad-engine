@@ -1,5 +1,4 @@
-const networkCapture = require('./tests/common/networkCapture');
-
+/* global browser */
 exports.config = {
 	specs: [
 		'./tests/specs/**/*.js'
@@ -14,7 +13,7 @@ exports.config = {
 			'./tests/specs/hivi-uap-ad.test.js',
 			'./tests/specs/hivi-uap-static-ad.test.js',
 			'./tests/specs/hivi-uap-jwp-ad.test.js',
-			'./tests/specs/hivi-uap-twitch-ad.test.js', // TODO write tests for Twitch player controls
+			'./tests/specs/hivi-uap-twitch-ad.test.js',
 			'./tests/specs/floating-ad.test.js',
 			'./tests/specs/sticky-ad.test.js',
 		],
@@ -37,16 +36,13 @@ exports.config = {
 		video: [
 			'./tests/specs/porvata.test.js',
 		],
-		currentTest: [
-			'./tests/specs/hivi-uap-ad.test.js', // spot for a test that is currently being worked on
-		],
-		otherFeature: [
+		vendors: [
 
 		]
 	},
 	exclude: [
 	],
-	maxInstances: 5,
+	maxInstances: 3,
 	capabilities: [{
 		browserName: 'chrome',
 		loggingPrefs: {
@@ -63,7 +59,7 @@ exports.config = {
 	waitforTimeout: 10000,
 	connectionRetryTimeout: 90000,
 	connectionRetryCount: 3,
-	services: ['selenium-standalone', networkCapture],
+	services: ['selenium-standalone'],
 	framework: 'mocha',
 	reporters: ['dot', 'allure'],
 
@@ -79,7 +75,6 @@ exports.config = {
 		timeout: 200000
 	},
 	before() {
-		// eslint-disable-next-line no-undef
 		browser.windowHandleSize({ width: 1920, height: 1080 });
 	}
 };

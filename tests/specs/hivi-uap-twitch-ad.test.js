@@ -10,14 +10,11 @@ describe('Twitch ads page: top leaderboard', () => {
 
 	before(() => {
 		browser.url(twitchAd.pageLink);
-	});
-
-	beforeEach(() => {
 		browser.waitForVisible(adSlots.topLeaderboard, timeouts.standard);
-		adStatus = helpers.checkSlotStatus(adSlots.topLeaderboard);
+		adStatus = helpers.getSlotStatus(adSlots.topLeaderboard);
 	});
 
-	it('Check if slot is visible', () => {
+	it('Check if slot is visible in viewport', () => {
 		expect(adStatus.inViewport, 'Not in viewport')
 			.to
 			.be
@@ -25,7 +22,7 @@ describe('Twitch ads page: top leaderboard', () => {
 	});
 
 	it('Check if dimensions are correct', () => {
-		const dimensions = helpers.checkUAPSizeSlotRatio(adSlots.topLeaderboard, 3.88);
+		const dimensions = helpers.checkUAPSizeSlotRatio(adSlots.topLeaderboard, twitchAd.twitchLeaderboardRatio);
 
 		expect(dimensions.status, dimensions.capturedErrors)
 			.to
@@ -40,14 +37,14 @@ describe('Twitch ads page: top leaderboard', () => {
 			.equal(twitchAd.topLeaderboardLineItemId, 'Line item ID mismatch');
 	});
 
-	it('Check if leaderboard does not obstruct the navbar', () => {
+	it('Check if navbar is visible in viewport', () => {
 		expect(browser.isVisibleWithinViewport(helpers.navbar), 'Navbar not visible')
 			.to
 			.be
 			.true;
 	});
 
-	it('Check if redirect on click works properly', () => {
+	it('Check if redirect on click works', () => {
 		expect(helpers.adRedirect(adSlots.topLeaderboard), 'Wrong link after redirect')
 			.to
 			.be
@@ -61,13 +58,47 @@ describe('Twitch ads page: player', () => {
 	});
 
 	beforeEach(() => {
-		browser.waitForVisible(adSlots.topLeaderboard);
+		browser.waitForVisible(twitchAd.twitchPlayer);
+	});
+
+	afterEach(() => {
+		browser.frame();
 	});
 
 	it('Check if Twitch player is visible', () => {
-		const playerFrame = browser.element(twitchAd.playerFrame).value;
+		expect(browser.isVisibleWithinViewport(twitchAd.twitchPlayer), 'Player not visible')
+			.to
+			.be
+			.true;
+	});
 
-		browser.frame(playerFrame);
-		browser.waitForVisible(twitchAd.twitchPlayer, timeouts.standard);
+	it('Check if playing the stream works', () => {
+		helpers.switchToFrame(twitchAd.twitchFrame);
+		browser.click(twitchAd.playPauseButton);
+		expect(browser.element(twitchAd.playerClass).getAttribute(twitchAd.buttonPressedAttribute))
+			.to
+			.include(twitchAd.playPauseButton.substring(1), 'Stream not playing');
+	});
+
+	it('Check if unmuting the stream works', () => {
+		helpers.switchToFrame(twitchAd.twitchFrame);
+		browser.click(twitchAd.unmuteButton);
+		expect(browser.element(twitchAd.playerClass).getAttribute(twitchAd.buttonPressedAttribute))
+			.to
+			.include(twitchAd.unmuteButton.substring(1), 'Stream not unmuted');
+	});
+
+	it('Check if clicking on Twitch button redirects to Twitch account with that stream', () => {
+		helpers.switchToFrame(twitchAd.twitchFrame);
+		browser.click(twitchAd.twitchButton);
+
+		const tabIds = browser.getTabIds();
+
+		browser.switchTab(tabIds[1]);
+		helpers.waitForUrl(twitchAd.twitchWord);
+		expect(browser.getUrl())
+			.to
+			.include(twitchAd.twitchWord, `Wrong page loaded: expected ${twitchAd.twitchWord}`);
+		helpers.closeNewTabs();
 	});
 });
