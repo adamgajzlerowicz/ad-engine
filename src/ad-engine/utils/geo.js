@@ -1,6 +1,7 @@
 import Cookies from 'js-cookie';
 import Random from './random';
 import { context } from '../services/context-service';
+import { logger } from './logger';
 
 const cacheMarker = '-cached',
 	cacheMaxAge = 30 * 60 * 1000,
@@ -8,11 +9,16 @@ const cacheMarker = '-cached',
 	negativePrefix = 'non-',
 	precision = 10 ** 6, // precision to 0.00000001 (or 0.000001%) of traffic
 	samplingSeparator = '/',
-	sessionCookieDefault = 'tracking_session_id';
+	sessionCookieDefault = 'tracking_session_id',
+	logGroup = 'geo';
 
 let cache = {},
 	cookieLoaded = false,
 	geoData = null;
+
+function log(message) {
+	logger(logGroup, message);
+};
 
 function hasCache(countryList) {
 	return countryList.some(country => country.indexOf(cacheMarker) !== -1);
@@ -49,13 +55,18 @@ function addResultToCache(name, result, samplingLimits, withCookie) {
 function getCookieDomain() {
 	const domain = (window.location.hostname).split('.');
 
-	return domain.length > 1 ? `.${domain[domain.length - 2]}.${domain[domain.length - 1]}` : undefined;
+	const result = domain.length > 1 ? `.${domain[domain.length - 2]}.${domain[domain.length - 1]}` : undefined;
+	console.log('*** getCookieDomain() -> ' + result);
+	return result;
 }
 
 function loadCookie() {
+	log('*** loadCookie()');
 	readSessionId();
 
 	const cookie = Cookies.get(`${context.get('options.session.id')}_basset`);
+	log('*** loadCookie() cookie: ' + cookie);
+
 
 	if (cookie) {
 		const cachedVariables = JSON.parse(cookie);
@@ -65,9 +76,9 @@ function loadCookie() {
 		});
 
 		setCookie(cookie);
+		cookieLoaded = true;
 	}
 
-	cookieLoaded = true;
 }
 
 function synchronizeCookie() {
@@ -83,6 +94,8 @@ function synchronizeCookie() {
 }
 
 function setCookie(value) {
+	log('*** setCookie(): ' + value);
+	log('*** setCookie() cookie name: ' + `${context.get('options.session.id')}_basset`);
 	Cookies.set(`${context.get('options.session.id')}_basset`, value, {
 		maxAge: cacheMaxAge,
 		expires: new Date(new Date().getTime() + cacheMaxAge),
@@ -243,6 +256,8 @@ export function resetSamplingCache() {
 export function readSessionId() {
 	const sessionCookieName = context.get('options.session.cookieName') || sessionCookieDefault;
 	const sid = Cookies.get(sessionCookieName) || context.get('options.session.id') || 'ae3';
+	log('*** readSessionId() sessionCookieName: ' + sessionCookieName);
+	log('*** readSessionId() sid: ' + sid);
 
 	setSessionId(sid);
 }

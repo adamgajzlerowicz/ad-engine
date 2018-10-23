@@ -799,7 +799,80 @@ var context_service_Context = function () {
 }();
 
 var context = new context_service_Context();
+// CONCATENATED MODULE: ./src/ad-engine/utils/query-string.js
+
+
+
+
+var query_string_QueryString = function () {
+	function QueryString() {
+		classCallCheck_default()(this, QueryString);
+	}
+
+	createClass_default()(QueryString, [{
+		key: 'getValues',
+		value: function getValues() {
+			var input = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+			var path = input || window.location.search.substr(1),
+			    queryParameters = {},
+			    queryString = path.split('&');
+
+			if (queryString === '') {
+				return null;
+			}
+
+			queryString.forEach(function (pair) {
+				var _pair$split = pair.split('='),
+				    _pair$split2 = slicedToArray_default()(_pair$split, 2),
+				    id = _pair$split2[0],
+				    value = _pair$split2[1];
+
+				if (value) {
+					queryParameters[id] = decodeURIComponent(value.replace(/\+/g, ' '));
+				}
+			});
+
+			return queryParameters;
+		}
+	}, {
+		key: 'get',
+		value: function get(key) {
+			var queryParameters = this.getValues();
+
+			return queryParameters[key];
+		}
+	}]);
+
+	return QueryString;
+}();
+
+var query_string_queryString = new query_string_QueryString();
+// CONCATENATED MODULE: ./src/ad-engine/utils/logger.js
+
+
+var debugGroup = query_string_queryString.get('adengine_debug') || '',
+    groups = debugGroup.split(',');
+
+if (debugGroup !== '') {
+	window.console.info('AdEngine debug mode - groups:', debugGroup === '1' ? 'all' : groups);
+}
+
+function logger(logGroup) {
+	if (debugGroup === '') {
+		return;
+	}
+
+	if (debugGroup === '1' || groups.indexOf(logGroup) !== -1) {
+		for (var _len = arguments.length, logValues = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+			logValues[_key - 1] = arguments[_key];
+		}
+
+		window.console.info(logGroup, logValues);
+	}
+}
 // CONCATENATED MODULE: ./src/ad-engine/utils/geo.js
+
 
 
 
@@ -814,11 +887,16 @@ var cacheMarker = '-cached',
     precision = Math.pow(10, 6),
     // precision to 0.00000001 (or 0.000001%) of traffic
 samplingSeparator = '/',
-    sessionCookieDefault = 'tracking_session_id';
+    sessionCookieDefault = 'tracking_session_id',
+    logGroup = 'geo';
 
 var cache = {},
     cookieLoaded = false,
     geoData = null;
+
+function log(message) {
+	logger(logGroup, message);
+};
 
 function hasCache(countryList) {
 	return countryList.some(function (country) {
@@ -862,13 +940,17 @@ function addResultToCache(name, result, samplingLimits, withCookie) {
 function getCookieDomain() {
 	var domain = window.location.hostname.split('.');
 
-	return domain.length > 1 ? '.' + domain[domain.length - 2] + '.' + domain[domain.length - 1] : undefined;
+	var result = domain.length > 1 ? '.' + domain[domain.length - 2] + '.' + domain[domain.length - 1] : undefined;
+	console.log('*** getCookieDomain() -> ' + result);
+	return result;
 }
 
 function loadCookie() {
+	log('*** loadCookie()');
 	readSessionId();
 
 	var cookie = external_js_cookie_default.a.get(context.get('options.session.id') + '_basset');
+	log('*** loadCookie() cookie: ' + cookie);
 
 	if (cookie) {
 		var cachedVariables = JSON.parse(cookie);
@@ -878,9 +960,8 @@ function loadCookie() {
 		});
 
 		setCookie(cookie);
+		cookieLoaded = true;
 	}
-
-	cookieLoaded = true;
 }
 
 function synchronizeCookie() {
@@ -896,6 +977,8 @@ function synchronizeCookie() {
 }
 
 function setCookie(value) {
+	log('*** setCookie(): ' + value);
+	log('*** setCookie() cookie name: ' + (context.get('options.session.id') + '_basset'));
 	external_js_cookie_default.a.set(context.get('options.session.id') + '_basset', value, {
 		maxAge: cacheMaxAge,
 		expires: new Date(new Date().getTime() + cacheMaxAge),
@@ -1057,6 +1140,8 @@ function resetSamplingCache() {
 function readSessionId() {
 	var sessionCookieName = context.get('options.session.cookieName') || sessionCookieDefault;
 	var sid = external_js_cookie_default.a.get(sessionCookieName) || context.get('options.session.id') || 'ae3';
+	log('*** readSessionId() sessionCookieName: ' + sessionCookieName);
+	log('*** readSessionId() sid: ' + sid);
 
 	setSessionId(sid);
 }
@@ -1141,78 +1226,6 @@ function makeLazyQueue(queue, callback) {
 		};
 	} else {
 		throw new Error('LazyQueue requires an array as the first parameter');
-	}
-}
-// CONCATENATED MODULE: ./src/ad-engine/utils/query-string.js
-
-
-
-
-var query_string_QueryString = function () {
-	function QueryString() {
-		classCallCheck_default()(this, QueryString);
-	}
-
-	createClass_default()(QueryString, [{
-		key: 'getValues',
-		value: function getValues() {
-			var input = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-			var path = input || window.location.search.substr(1),
-			    queryParameters = {},
-			    queryString = path.split('&');
-
-			if (queryString === '') {
-				return null;
-			}
-
-			queryString.forEach(function (pair) {
-				var _pair$split = pair.split('='),
-				    _pair$split2 = slicedToArray_default()(_pair$split, 2),
-				    id = _pair$split2[0],
-				    value = _pair$split2[1];
-
-				if (value) {
-					queryParameters[id] = decodeURIComponent(value.replace(/\+/g, ' '));
-				}
-			});
-
-			return queryParameters;
-		}
-	}, {
-		key: 'get',
-		value: function get(key) {
-			var queryParameters = this.getValues();
-
-			return queryParameters[key];
-		}
-	}]);
-
-	return QueryString;
-}();
-
-var query_string_queryString = new query_string_QueryString();
-// CONCATENATED MODULE: ./src/ad-engine/utils/logger.js
-
-
-var debugGroup = query_string_queryString.get('adengine_debug') || '',
-    groups = debugGroup.split(',');
-
-if (debugGroup !== '') {
-	window.console.info('AdEngine debug mode - groups:', debugGroup === '1' ? 'all' : groups);
-}
-
-function logger(logGroup) {
-	if (debugGroup === '') {
-		return;
-	}
-
-	if (debugGroup === '1' || groups.indexOf(logGroup) !== -1) {
-		for (var _len = arguments.length, logValues = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-			logValues[_key - 1] = arguments[_key];
-		}
-
-		window.console.info(logGroup, logValues);
 	}
 }
 // CONCATENATED MODULE: ./src/ad-engine/utils/sampler.js
@@ -1658,12 +1671,12 @@ function buildVastUrl(aspectRatio, slotName) {
 
 
 
-var logGroup = 'google-ima-setup';
+var google_ima_setup_logGroup = 'google-ima-setup';
 
 function getOverriddenVast() {
 	if (query_string_queryString.get('porvata_override_vast') === '1') {
 		var vastXML = window.localStorage.getItem('porvata_vast');
-		logger(logGroup, 'Overridden VAST', vastXML);
+		logger(google_ima_setup_logGroup, 'Overridden VAST', vastXML);
 
 		return vastXML;
 	}
