@@ -45,6 +45,10 @@ describe('Common slots: top leaderboard', () => {
 	});
 });
 
+describe('Common slots: top leaderboard requests', () => {
+	
+});
+
 describe('Common slots: top boxad', () => {
 	let adStatus;
 
@@ -83,6 +87,10 @@ describe('Common slots: top boxad', () => {
 			.be
 			.true;
 	});
+});
+
+describe('Common slots: top boxad requests', () => {
+	
 });
 
 describe('Common slots: rail module', () => {
@@ -153,6 +161,10 @@ describe('Common slots: incontent boxad', () => {
 	});
 });
 
+describe('Common slots: incontent boxad requests', () => {
+	
+});
+
 describe('Common slots: bottom leaderboard', () => {
 	let adStatus;
 
@@ -192,5 +204,9 @@ describe('Common slots: bottom leaderboard', () => {
 			.be
 			.true;
 	});
+});
+
+describe('Common slots: bottom leaderboard requests', () => {
+	
 });
 
