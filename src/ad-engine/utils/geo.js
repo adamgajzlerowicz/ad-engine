@@ -76,9 +76,8 @@ function loadCookie() {
 		});
 
 		setCookie(cookie);
-		cookieLoaded = true;
 	}
-
+	cookieLoaded = true;
 }
 
 function synchronizeCookie() {
