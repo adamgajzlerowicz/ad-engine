@@ -11,7 +11,10 @@ class Helpers {
 		this.classHidden = '.hide';
 		this.classProperty = 'class';
 		this.navbar = 'nav';
-		this.clickThroughUrlDomain = 'fandom';
+		this.clickThroughUrlDomains = [
+			'wikia.com',
+			'fandom.com',
+		];
 		this.wrapper = '.wrapper';
 	}
 
@@ -58,6 +61,7 @@ class Helpers {
 
 		if (tabIds.length > 1) {
 			for (let i = 1; i <= tabIds.length - 1; i += 1) {
+				browser.switchTab(tabIds[i]);
 				browser.close(i);
 			}
 		}
@@ -250,21 +254,40 @@ class Helpers {
 	 * @param url expected url
 	 * @returns {boolean} returns false if there were no errors, else it returns true
 	 */
-	adRedirect(adSlot, url = this.clickThroughUrlDomain) {
-		let result = false;
-
+	adRedirect(adSlot, urls = this.clickThroughUrlDomains) {
 		this.waitForLineItemIdAttribute(adSlot);
+
 		browser.waitForEnabled(adSlot, timeouts.standard);
 		browser.click(adSlot);
 
+		const { Target } = global.clientSelenium;
 		const tabIds = browser.getTabIds();
+		let u = '';
+		let result = false;
 
-		browser.switchTab(tabIds[1]);
-		this.waitForUrl(url);
-
-		if (browser.getUrl().includes(url)) {
-			result = true;
+		function getTargets(tabId) {
+			return Target.getTargets().then(
+				(targets) => {
+					const target = targets.targetInfos.find(t => tabId.includes(t.targetId));
+					if (target) {
+						u = target.url;
+					}
+				}
+			);
 		}
+		browser.waitUntil(
+			() => {
+				browser.call(getTargets(tabIds[1]));
+				// TODO: Ignore es-lint comment regarding unnecessary escape
+				result = urls
+					.map(url => RegExp(`^http(s)?://(www\.)?${url}`).test(u))
+					.some(matches => matches);
+				return result;
+			},
+			timeouts.newUrlTimeout,
+			'expected new page after 10 seconds',
+			timeouts.interval,
+		);
 		this.closeNewTabs();
 		return result;
 	}
