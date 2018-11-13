@@ -563,6 +563,7 @@ var stickiness_Stickiness = function (_EventEmitter) {
 
 	function Stickiness(adSlot) {
 		var customWhen = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : promise_default.a.resolve();
+		var unstickOnResize = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
 		classCallCheck_default()(this, Stickiness);
 
@@ -580,6 +581,7 @@ var stickiness_Stickiness = function (_EventEmitter) {
 
 			return ad_engine_["utils"].logger.apply(ad_engine_["utils"], [Stickiness.LOG_GROUP].concat(args));
 		};
+		_this.unstickOnResize = unstickOnResize;
 
 		if (!isFunction_default()(_this.customWhen)) {
 			promise_default.a.all([_this.customWhen]).then(function () {
@@ -668,6 +670,19 @@ var stickiness_Stickiness = function (_EventEmitter) {
 			}
 		}
 	}, {
+		key: 'revertStickinessOnResize',
+		value: function revertStickinessOnResize() {
+			var _this3 = this;
+
+			if (this.unstickOnResize) {
+				window.addEventListener('resize', function () {
+					_this3.logger('Unsticking');
+					_this3.emit(Stickiness.UNSTICK_IMMEDIATELY_EVENT);
+					_this3.sticky = false;
+				}, { once: true });
+			}
+		}
+	}, {
 		key: 'close',
 		value: function close() {
 			this.logger('Closing and removing stickiness');
@@ -730,16 +745,17 @@ var stickiness_Stickiness = function (_EventEmitter) {
 						switch (_context3.prev = _context3.next) {
 							case 0:
 								this.applyStickiness();
+								this.revertStickinessOnResize();
 								this.logger('waiting for viewability and custom condition');
 
-								_context3.next = 4;
+								_context3.next = 5;
 								return promise_default.a.all([!this.adSlot.isViewed() ? ad_engine_["utils"].once(this.adSlot, ad_engine_["AdSlot"].SLOT_VIEWED_EVENT) : promise_default.a.resolve(), isFunction_default()(this.customWhen) ? this.customWhen() : this.customWhen]);
 
-							case 4:
+							case 5:
 
 								this.registerRevertStickiness();
 
-							case 5:
+							case 6:
 							case 'end':
 								return _context3.stop();
 						}
@@ -1053,9 +1069,9 @@ var sticky_ad_StickyAd = function () {
 				}
 			}
 
-			this.leftOffset = ad_engine_["utils"].getLeftOffset(this.adSlot.getElement().firstChild.firstChild);
+			this.leftOffset = ad_engine_["utils"].getLeftOffset(this.adSlot.getElement().querySelector('div').firstChild);
 
-			var startOffset = ad_engine_["utils"].getTopOffset(this.adSlot.getElement().firstChild) - this.topOffset;
+			var startOffset = ad_engine_["utils"].getTopOffset(this.adSlot.getElement().querySelector('div')) - this.topOffset;
 
 			this.scrollListener = ad_engine_["scrollListener"].addCallback(function () {
 				var scrollPosition = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
@@ -1101,7 +1117,7 @@ var sticky_ad_StickyAd = function () {
 				};
 			}();
 
-			this.stickiness = new stickiness_Stickiness(this.adSlot, whenSlotViewedOrTimeout());
+			this.stickiness = new stickiness_Stickiness(this.adSlot, whenSlotViewedOrTimeout(), true);
 		}
 	}, {
 		key: 'addUnstickButton',
@@ -1115,7 +1131,7 @@ var sticky_ad_StickyAd = function () {
 				}
 			}).render();
 
-			this.adSlot.getElement().firstChild.appendChild(this.closeButton);
+			this.adSlot.getElement().querySelector('div').appendChild(this.closeButton);
 		}
 	}, {
 		key: 'removeUnstickButton',
@@ -1127,8 +1143,8 @@ var sticky_ad_StickyAd = function () {
 		value: function removeStickyParameters() {
 			this.adSlot.getElement().classList.remove(CSS_CLASSNAME_STICKY_SLOT);
 			this.adSlot.getElement().style.height = null;
-			this.adSlot.getElement().firstChild.style.top = null;
-			this.adSlot.getElement().firstChild.style.left = null;
+			this.adSlot.getElement().querySelector('div').style.top = null;
+			this.adSlot.getElement().querySelector('div').style.left = null;
 		}
 	}, {
 		key: 'addUnstickEventsListeners',
@@ -1155,11 +1171,11 @@ var sticky_ad_StickyAd = function () {
 								}
 
 								_context2.next = 3;
-								return animate(this.adSlot.getElement().firstChild, CSS_CLASSNAME_SLIDE_OUT_ANIMATION, SLIDE_OUT_TIME);
+								return animate(this.adSlot.getElement().querySelector('div'), CSS_CLASSNAME_SLIDE_OUT_ANIMATION, SLIDE_OUT_TIME);
 
 							case 3:
 								this.removeStickyParameters();
-								animate(this.adSlot.getElement().firstChild, CSS_CLASSNAME_FADE_IN_ANIMATION, FADE_IN_TIME);
+								animate(this.adSlot.getElement().querySelector('div'), CSS_CLASSNAME_FADE_IN_ANIMATION, FADE_IN_TIME);
 
 								this.removeUnstickButton();
 								_context2.next = 13;
@@ -1167,9 +1183,9 @@ var sticky_ad_StickyAd = function () {
 
 							case 8:
 								this.adSlot.getElement().classList.add(CSS_CLASSNAME_STICKY_SLOT);
-								this.adSlot.getElement().style.height = this.adSlot.getElement().firstChild.offsetHeight + 'px';
-								this.adSlot.getElement().firstChild.style.top = this.topOffset + 'px';
-								this.adSlot.getElement().firstChild.style.left = this.leftOffset + 'px';
+								this.adSlot.getElement().style.height = this.adSlot.getElement().querySelector('div').offsetHeight + 'px';
+								this.adSlot.getElement().querySelector('div').style.top = this.topOffset + 'px';
+								this.adSlot.getElement().querySelector('div').style.left = this.leftOffset + 'px';
 
 								this.addUnstickButton();
 
@@ -2294,17 +2310,20 @@ var loadTwitchPlayer = function () {
 
 var loadTwitchAd = function () {
 	var _ref3 = asyncToGenerator_default()( /*#__PURE__*/regenerator_default.a.mark(function _callee3(iframe, params) {
+		var player;
 		return regenerator_default.a.wrap(function _callee3$(_context3) {
 			while (1) {
 				switch (_context3.prev = _context3.next) {
 					case 0:
-						_context3.next = 2;
+						player = params.player;
+						_context3.next = 3;
 						return loadTwitchPlayer(iframe, params);
 
-					case 2:
-						window.addEventListener('resize', throttle_default()(recalculateTwitchSize(params), 250));
-
 					case 3:
+						window.addEventListener('resize', throttle_default()(recalculateTwitchSize(params), 250));
+						player.firstChild.id = 'twitchPlayerContainer';
+
+					case 5:
 					case 'end':
 						return _context3.stop();
 				}
@@ -4195,7 +4214,8 @@ var roadblock_Roadblock = function () {
 		value: function getDefaultConfig() {
 			return {
 				slotsToEnable: [],
-				slotsToDisable: []
+				slotsToDisable: [],
+				onInit: function onInit() {}
 			};
 		}
 	}]);
@@ -4217,6 +4237,10 @@ var roadblock_Roadblock = function () {
 			this.params = params;
 			this.params.adProduct = 'ruap';
 			universalAdPackage.init(this.params, this.config.slotsToEnable, this.config.slotsToDisable);
+
+			if (this.config.onInit) {
+				this.config.onInit();
+			}
 		}
 	}]);
 
@@ -4230,9 +4254,128 @@ var roadblock_Roadblock = function () {
 
 
 
+// CONCATENATED MODULE: ./src/ad-products/templates/out-of-page/floor-adhesion.js
+
+
+
+
+
+var floor_adhesion_FloorAdhesion = function () {
+	function FloorAdhesion(adSlot) {
+		classCallCheck_default()(this, FloorAdhesion);
+
+		this.adSlot = adSlot;
+		this.config = ad_engine_["context"].get('templates.floorAdhesion');
+	}
+
+	createClass_default()(FloorAdhesion, [{
+		key: 'init',
+		value: function init() {
+			var _this = this;
+
+			var wrapper = this.adSlot.getElement();
+			var closeButton = new close_button_CloseButton({
+				onClick: function onClick() {
+					ad_engine_["slotTweaker"].hide(_this.adSlot);
+					ad_engine_["utils"].logger(FloorAdhesion.getName(), 'closed');
+				}
+			});
+
+			this.config.onInit();
+
+			wrapper.appendChild(closeButton.render());
+			wrapper.classList.add('floor-adhesion');
+			wrapper.classList.add('out-of-page-template');
+
+			ad_engine_["slotTweaker"].adjustIframeByContentSize(this.adSlot);
+
+			ad_engine_["utils"].logger(FloorAdhesion.getName(), 'init');
+		}
+	}], [{
+		key: 'getName',
+		value: function getName() {
+			return 'floorAdhesion';
+		}
+	}, {
+		key: 'getDefaultConfig',
+		value: function getDefaultConfig() {
+			return {
+				onInit: function onInit() {}
+			};
+		}
+	}]);
+
+	return FloorAdhesion;
+}();
+// CONCATENATED MODULE: ./src/ad-products/templates/out-of-page/interstitial.js
+
+
+
+
+
+
+var interstitial_Interstitial = function () {
+	function Interstitial(adSlot) {
+		classCallCheck_default()(this, Interstitial);
+
+		this.adSlot = adSlot;
+		this.config = ad_engine_["context"].get('templates.interstitial');
+	}
+
+	createClass_default()(Interstitial, [{
+		key: 'init',
+		value: function init() {
+			var _this = this;
+
+			var wrapper = this.adSlot.getElement();
+			var closeButton = new close_button_CloseButton({
+				onClick: function onClick() {
+					document.documentElement.classList.remove('stop-scrolling');
+					ad_engine_["slotTweaker"].hide(_this.adSlot);
+					ad_engine_["utils"].logger(Interstitial.getName(), 'closed');
+				}
+			});
+			var label = new advertisement_label_AdvertisementLabel();
+
+			this.config.onInit();
+
+			wrapper.appendChild(closeButton.render());
+			wrapper.appendChild(label.render());
+			wrapper.classList.add('interstitial');
+			wrapper.classList.add('out-of-page-template');
+			document.documentElement.classList.add('stop-scrolling');
+
+			ad_engine_["slotTweaker"].adjustIframeByContentSize(this.adSlot);
+
+			ad_engine_["utils"].logger(Interstitial.getName(), 'init');
+
+			ad_engine_["events"].once(ad_engine_["events"].BEFORE_PAGE_CHANGE_EVENT, function () {
+				document.documentElement.classList.remove('stop-scrolling');
+			});
+		}
+	}], [{
+		key: 'getName',
+		value: function getName() {
+			return 'interstitial';
+		}
+	}, {
+		key: 'getDefaultConfig',
+		value: function getDefaultConfig() {
+			return {
+				onInit: function onInit() {}
+			};
+		}
+	}]);
+
+	return Interstitial;
+}();
+// CONCATENATED MODULE: ./src/ad-products/templates/out-of-page/index.js
+
+
 // CONCATENATED MODULE: ./src/ad-products/templates/outstream/index.js
 
 // CONCATENATED MODULE: ./src/ad-products/templates/index.js
+
 
 
 
@@ -4249,6 +4392,8 @@ var roadblock_Roadblock = function () {
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "BigFancyAdInPlayer", function() { return big_fancy_ad_in_player_BigFancyAdInPlayer; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "Roadblock", function() { return roadblock_Roadblock; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "universalAdPackage", function() { return universalAdPackage; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "FloorAdhesion", function() { return floor_adhesion_FloorAdhesion; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "Interstitial", function() { return interstitial_Interstitial; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "DEFAULT_VIDEO_ASPECT_RATIO", function() { return DEFAULT_VIDEO_ASPECT_RATIO; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "IMA_VPAID_INSECURE_MODE", function() { return IMA_VPAID_INSECURE_MODE; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "PorvataTemplate", function() { return porvata_template_PorvataTemplate; });
