@@ -1118,7 +1118,6 @@ var pubmatic_Pubmatic = function (_BaseAdapter) {
 			var sizes = _ref.sizes,
 			    ids = _ref.ids;
 
-			console.log('TEST BIELIK', code);
 			switch (code.toLowerCase()) {
 				case 'featured':
 				case 'incontent_player':
