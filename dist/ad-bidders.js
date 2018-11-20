@@ -1339,7 +1339,8 @@ var rubicon_Rubicon = function (_BaseAdapter) {
 				mediaType: 'video',
 				mediaTypes: {
 					video: {
-						playerSize: [640, 480]
+						playerSize: [640, 480],
+						context: 'instream'
 					}
 				},
 				bids: [{
@@ -1861,6 +1862,8 @@ function transformPriceFromCpm(cpm, maxCpm) {
 
 var videoBiddersCap50 = ['appnexusAst', 'rubicon', 'wikiaVideo']; // bidders with $50 cap
 
+var dfpVideoBidders = [{ bidderCode: 'appnexusAst', contextKey: 'custom.appnexusDfp' }, { bidderCode: 'rubicon', contextKey: 'custom.rubiconDfp' }, { bidderCode: 'pubmatic', contextKey: 'custom.pubmaticDfp' }];
+
 function getSettings() {
 	return {
 		standard: {
@@ -1895,11 +1898,18 @@ function getSettings() {
 			}, {
 				key: 'hb_uuid',
 				val: function val(bidResponse) {
-					return bidResponse.bidderCode === 'appnexusAst' && ad_engine_["context"].get('custom.appnexusDfp') || bidResponse.bidderCode === 'rubicon' && ad_engine_["context"].get('custom.rubiconDfp') ? bidResponse.videoCacheKey : 'disabled';
+					return getBidderUuid(bidResponse);
 				}
 			}]
 		}
 	};
+}
+
+function getBidderUuid(bidResponse) {
+	var isVideo = dfpVideoBidders.some(function (video) {
+		return bidResponse.bidderCode === video.bidderCode && ad_engine_["context"].get(video.contextKey);
+	});
+	return isVideo ? bidResponse.videoCacheKey : 'disabled';
 }
 // CONCATENATED MODULE: ./src/ad-bidders/prebid/index.js
 
