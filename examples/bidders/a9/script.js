@@ -1,4 +1,4 @@
-import { AdEngine, context, events, utils, apstag } from '@wikia/ad-engine';
+import { AdEngine, context, events, utils, apstag, cmp } from '@wikia/ad-engine';
 import { bidders } from '@wikia/ad-bidders';
 import { utils as adProductsUtils } from '@wikia/ad-products';
 
@@ -7,7 +7,7 @@ import '../../styles.scss';
 
 const optIn = utils.queryString.get('tracking-opt-in-status') !== '0';
 
-window.__cmp = function (cmd, param, cb) {
+cmp.override((cmd, param, cb) => {
 	if (cmd === 'getConsentData') {
 		cb({
 			consentData: optIn ? 'BOQu5jyOQu5jyCNABAPLBR-AAAAeCAFgAUABYAIAAaABFACY' : 'BOQu5naOQu5naCNABAPLBRAAAAAeCAAA',
@@ -29,7 +29,7 @@ window.__cmp = function (cmd, param, cb) {
 	} else {
 		cb(null, false);
 	}
-};
+});
 
 context.extend(customContext);
 context.set('targeting.artid', '266');

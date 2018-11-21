@@ -1,37 +1,36 @@
 export class Apstag {
 	init(apsConfig) {
-		this.configureApstag();
+		this.configure();
 		window.apstag.init(apsConfig);
 	}
 
 	/** @private */
-	configureApstag() {
+	configure() {
 		window.apstag = window.apstag || {};
 		window.apstag._Q = window.apstag._Q || [];
 
 		if (typeof window.apstag.init === 'undefined') {
 			window.apstag.init = (...args) => {
-				this.configureApstagCommand('i', args);
+				this.configureCommand('i', args);
 			};
 		}
 
 		if (typeof window.apstag.fetchBids === 'undefined') {
 			window.apstag.fetchBids = (...args) => {
-				this.configureApstagCommand('f', args);
+				this.configureCommand('f', args);
 			};
 		}
 	}
 
 	/** @private */
-	configureApstagCommand(command, args) {
+	configureCommand(command, args) {
 		window.apstag._Q.push([command, args]);
 	}
 
 	/**
-	 * @private
 	 * @param {object} bidsConfig configuration of bids
-	 * @param {function(object)} callback Callback receiving current bids
-	 * @returns {!Promise} If `callback` has been omitted
+	 * @param {function(object)} cb Callback receiving current bids
+	 * @returns {!Promise} If `cb` has been omitted
 	 */
 	fetchBids(bidsConfig, cb) {
 		if (cb) {

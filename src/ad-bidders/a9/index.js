@@ -1,4 +1,4 @@
-import { context, slotService, utils, apstag } from '@wikia/ad-engine';
+import { context, slotService, utils, apstag, cmp } from '@wikia/ad-engine';
 import { BaseBidder } from '../base-bidder';
 
 let loaded = false;
@@ -16,6 +16,7 @@ export class A9 extends BaseBidder {
 		this.slotNamesMap = {};
 		this.targetingKeys = [];
 		this.apstag = apstag;
+		this.cmp = cmp;
 	}
 
 	init(onResponse, consentData = {}) {
@@ -131,16 +132,10 @@ export class A9 extends BaseBidder {
 		});
 	}
 
-	callBids(onResponse) {
-		// DISCUSS: Add reference to window.__cmp. Perhaps introduce wrapper.
-		// It could also be Premise based:
-		// - with callback at it is
-		// - when omitted, as a promise
-		// Consider using wrapper on window everywhere.
-		if (window.__cmp) {
-			window.__cmp('getConsentData', null, (consentData) => {
-				this.init(onResponse, consentData);
-			});
+	async callBids(onResponse) {
+		if (this.cmp) {
+			const consentData = await this.cmp.getConsentData(null);
+			this.init(onResponse, consentData);
 		} else {
 			this.init(onResponse);
 		}
