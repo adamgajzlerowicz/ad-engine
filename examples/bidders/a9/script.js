@@ -1,4 +1,4 @@
-import { AdEngine, context, events, utils } from '@wikia/ad-engine';
+import { AdEngine, context, events, utils, apstag } from '@wikia/ad-engine';
 import { bidders } from '@wikia/ad-bidders';
 import { utils as adProductsUtils } from '@wikia/ad-products';
 
@@ -69,12 +69,12 @@ events.on(events.AD_SLOT_CREATED, (slot) => {
 window.bidders = bidders;
 
 document.getElementById('enableDebugMode').addEventListener('click', () => {
-	window.apstag.debug('enable');
+	apstag.enableDebug();
 	window.location.reload();
 });
 
 document.getElementById('disableDebugMode').addEventListener('click', () => {
-	window.apstag.debug('disable');
+	apstag.disableDebug();
 	window.location.reload();
 });
 
