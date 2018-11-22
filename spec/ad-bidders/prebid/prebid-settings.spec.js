@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { cloneDeep } from 'lodash';
 import { context } from '../../../src/ad-engine/services/context-service';
 import { getSettings } from '../../../src/ad-bidders/prebid/prebid-settings';
 
@@ -22,9 +21,7 @@ describe('getBidderUuid', () => {
 
 	it('should return disabled (bidderCode)', () => {
 		context.set('custom.rubiconDfp', true);
-		const newBidResponses = cloneDeep(bidResponse);
-		newBidResponses.bidderCode = undefined;
-		const result = getBidderUuid(newBidResponses);
+		const result = getBidderUuid({ ...bidResponse, bidderCode: undefined });
 		expect(result).to.equal('disabled');
 	});
 
