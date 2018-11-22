@@ -1,7 +1,29 @@
+class HiviUapDesktop extends HiviUap {
+	constructor() {
+		super();
+		this.videoPlayer = '.video-player';
+	}
+}
+
+class HiviUapMobile extends HiviUap {
+	constructor() {
+		super();
+		this.videoPlayer = '.video-player';
+	}
+}
+
+
 export class HiviUap {
+	static make() {
+		if (wdEnvironment.mobile) {
+			return new HiviUapMobile();
+		}
+		return new HiviUapDesktop();
+	}
+
 	constructor() {
 		this.pageLink = 'templates/hivi-uap/';
-		this.videoPlayer = '.video-player';
+		this.videoPlayer = '';
 		this.playerFullscreen = `${this.videoPlayer}.video-player-fullscreen`;
 		this.playerFullscreenButton = `${this.videoPlayer} .toggle-fullscreen-button`;
 		this.volumeButton = `${this.videoPlayer} .volume-button`;
@@ -23,6 +45,13 @@ export class HiviUap {
 	waitForVideoToFinish() {
 		browser.pause(this.videoLength);
 	}
+
+	clickPlayer() {
+		browser.waitForVisible(this.newVideoPlayer);
+		browser.click(this.newVideoPlayer);
+		browser.isVisible(this.buttonIsOn);
+	}
 }
 
-export default new HiviUap();
+export default HiviUap.make();
+
