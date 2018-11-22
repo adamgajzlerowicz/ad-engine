@@ -30,7 +30,8 @@ describe('Rubicon bidder adapter', () => {
 				mediaType: 'video',
 				mediaTypes: {
 					video: {
-						playerSize: [640, 480]
+						playerSize: [640, 480],
+						context: 'instream'
 					}
 				},
 				bids: [
