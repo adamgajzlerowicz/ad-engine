@@ -1,3 +1,5 @@
+import { bindCallback } from '../utils';
+
 export class Cmp {
 	get exists() {
 		return !!window.__cmp;
@@ -7,14 +9,10 @@ export class Cmp {
 	 * @param {function(object)} cb Callback receiving current bids
 	 * @returns {!Promise} If `cb` has been omitted
 	 */
-	getConsentData(param, cb) {
-		if (cb) {
-			window.__cmp('getConsentData', param, consentData => cb(consentData));
-			return {};
-		}
-		return new Promise((resolve) => {
+	getConsentData(param, cb = null) {
+		return bindCallback(cb, new Promise((resolve) => {
 			window.__cmp('getConsentData', param, consentData => resolve(consentData));
-		});
+		}));
 	}
 
 	override(newCmp) {

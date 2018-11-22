@@ -1,3 +1,4 @@
+export * from './bind-callback';
 export * from './client';
 export * from './dimensions';
 export * from './document';

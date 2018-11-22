@@ -1,3 +1,5 @@
+import { bindCallback } from '../utils';
+
 export class Apstag {
 	init(apsConfig) {
 		this.configure();
@@ -32,15 +34,10 @@ export class Apstag {
 	 * @param {function(object)} cb Callback receiving current bids
 	 * @returns {!Promise} If `cb` has been omitted
 	 */
-	fetchBids(bidsConfig, cb) {
-		if (cb) {
-			window.apstag.fetchBids(bidsConfig, currentBids => cb(currentBids));
-			// DISCUSS: consistent-return... maybe not?
-			return {};
-		}
-		return new Promise((resolve) => {
+	fetchBids(bidsConfig, cb = null) {
+		return bindCallback(cb, new Promise((resolve) => {
 			window.apstag.fetchBids(bidsConfig, currentBids => resolve(currentBids));
-		});
+		}));
 	}
 
 	targetingKeys() {

@@ -31,8 +31,7 @@ export class A9 extends BaseBidder {
 	initIfNotLoaded(consentData) {
 		if (!loaded) {
 			this.insertScript();
-			const apsConfig = this.getApsConfig(consentData);
-			this.apstag.init(apsConfig);
+			this.apstag.init(this.getApsConfig(consentData));
 			loaded = true;
 		}
 	}
@@ -85,7 +84,6 @@ export class A9 extends BaseBidder {
 			.filter(slot => slot !== null);
 	}
 
-	// TODO: Ugly? SR
 	createSlotDefinition(slotName, config) {
 		if (!slotService.getState(slotName)) {
 			return null;
