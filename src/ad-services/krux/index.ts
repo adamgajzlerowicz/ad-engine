@@ -1,4 +1,9 @@
-import { context, utils } from '@wikia/ad-engine';
+import * as adEngine from '@wikia/ad-engine';
+
+interface MyWindow extends Window{
+    Krux?: any,
+}
+declare var window: MyWindow;
 
 const logGroup = 'krux';
 
@@ -7,10 +12,10 @@ const logGroup = 'krux';
  * @returns {Promise}
  */
 function loadScript() {
-	const kruxId = context.get('services.krux.id');
+	const kruxId = adEngine.context.get('services.krux.id');
 	const kruxLibraryUrl = `//cdn.krxd.net/controltag?confid=${kruxId}`;
 
-	return utils.scriptLoader.loadScript(kruxLibraryUrl, 'text/javascript', true, 'first', {
+	return adEngine.utils.scriptLoader.loadScript(kruxLibraryUrl, 'text/javascript', true, 'first', {
 		id: 'krux-control-tag'
 	});
 }
@@ -42,16 +47,16 @@ window.Krux.q = window.Krux.q || [];
  */
 class Krux {
 	/**
-	 * Requests service, saves user id and segments in context and exports page level params
+	 * Requests service, saves user id and segments in adEngine.context and exports page level params
 	 * @returns {Promise}
 	 */
 	call() {
-		if (!context.get('services.krux.enabled') || !context.get('options.trackingOptIn')) {
-			utils.logger(logGroup, 'disabled');
+		if (!adEngine.context.get('services.krux.enabled') || !adEngine.context.get('options.trackingOptIn')) {
+			adEngine.utils.logger(logGroup, 'disabled');
 			return Promise.resolve();
 		}
 
-		utils.logger(logGroup, 'loading');
+		adEngine.utils.logger(logGroup, 'loading');
 		return loadScript().then(() => {
 			this.exportPageParams();
 			this.importUserData();
@@ -63,8 +68,8 @@ class Krux {
 	 * @returns {void}
 	 */
 	exportPageParams() {
-		Object.keys(context.get('targeting')).forEach((key) => {
-			const value = context.get(`targeting.${key}`);
+		Object.keys(adEngine.context.get('targeting')).forEach((key) => {
+			const value = adEngine.context.get(`targeting.${key}`);
 
 			if (value) {
 				window[`kruxDartParam_${key}`] = value;
@@ -80,9 +85,9 @@ class Krux {
 		const user = getKruxData('kxuser');
 		const segments = getKruxData('kxsegs');
 
-		context.set('targeting.kuid', user || null);
-		context.set('targeting.ksg', segments ? segments.split(',') : []);
-		utils.logger(logGroup, 'data set', user, segments);
+		adEngine.context.set('targeting.kuid', user || null);
+		adEngine.context.set('targeting.ksg', segments ? segments.split(',') : []);
+		adEngine.utils.logger(logGroup, 'data set', user, segments);
 	}
 
 	/**
@@ -90,7 +95,7 @@ class Krux {
 	 * @returns {string}
 	 */
 	getUserId() {
-		return context.get('targeting.kuid') || null;
+		return adEngine.context.get('targeting.kuid') || null;
 	}
 
 	/**
@@ -98,7 +103,7 @@ class Krux {
 	 * @returns {string[]}
 	 */
 	getSegments() {
-		return context.get('targeting.ksg') || [];
+		return adEngine.context.get('targeting.ksg') || [];
 	}
 }
 

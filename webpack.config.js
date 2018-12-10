@@ -27,7 +27,7 @@ function findExamplePages(startPath, filter) {
 	});
 }
 
-findExamplePages('./examples', 'script.js');
+// findExamplePages('./examples', 'script.js');
 
 const common = {
 	mode: 'development',
@@ -97,7 +97,7 @@ const development = {
 			[pkg.name]: path.join(__dirname, 'src/ad-engine'),
 			'@wikia/ad-bidders': path.join(__dirname, 'src/ad-bidders'),
 			'@wikia/ad-products': path.join(__dirname, 'src/ad-products'),
-			'@wikia/ad-services': path.join(__dirname, 'src/ad-services')
+			// '@wikia/ad-services': path.join(__dirname, 'src/ad-services')
 		}
 	}
 };
@@ -303,12 +303,13 @@ module.exports = function (env) {
 			merge(common, adProducts.config, adProducts.targets.commonjs),
 			merge(common, adBidders.config, adBidders.targets.commonjs),
 			merge(common, adBidders.config, adBidders.targets.window),
-			merge(common, adServices.config, adServices.targets.commonjs),
-			merge(common, adServices.config, adServices.targets.window)
+			// merge(common, adServices.config, adServices.targets.commonjs),
+			// merge(common, adServices.config, adServices.targets.window)
 		];
 	} else if (isTest) {
 		return merge(common, test);
 	}
 
-	return merge(common, development);
+	return common;
+	// return merge(common, development);
 };

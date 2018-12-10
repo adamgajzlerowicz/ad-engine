@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": false,
+    "lib": ["es6", "dom", "es2017.object"],
+    "module": "es6",
+    "target": "es6",
+    "allowJs": true,
+    "baseUrl": ".", // This must be specified if "paths" is.
+    "paths": {
+      "@wikia/ad-engine": ["src/ad-engine"] // This mapping is relative to "baseUrl"
+    }
+  }
+}

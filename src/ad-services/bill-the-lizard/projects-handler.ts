@@ -1,4 +1,4 @@
-import { context, utils } from '@wikia/ad-engine';
+import * as adEngine from '@wikia/ad-engine';
 
 const logGroup = 'project-handler';
 
@@ -6,16 +6,14 @@ const logGroup = 'project-handler';
  * Bill the Lizard projects handler
  */
 export class ProjectsHandler {
-	constructor() {
-		this.projects = {};
-	}
+    projects: any = {};
 
 	/**
 	 * Enables project by name
 	 * @param {string} name
 	 */
 	enable(name) {
-		utils.logger(logGroup, `project ${name} enabled`);
+		adEngine.utils.logger(logGroup, `project ${name} enabled`);
 		this.projects[name] = true;
 	}
 
@@ -34,8 +32,8 @@ export class ProjectsHandler {
 	 * @returns {{models: ModelDefinition[], parameters: Object}}
 	 */
 	getEnabledModelsWithParams(projectNames) {
-		const projects = context.get('services.billTheLizard.projects');
-		const projectParameters = context.get('services.billTheLizard.parameters');
+		const projects = adEngine.context.get('services.billTheLizard.projects');
+		const projectParameters = adEngine.context.get('services.billTheLizard.parameters');
 		const enabledProjectNames = Object.keys(projects)
 			.filter(name => (this.isEnabled(name) && projectNames.includes(name)));
 		const models = [];
@@ -46,7 +44,7 @@ export class ProjectsHandler {
 			let isNextModelExecutable = true;
 
 			projects[name].forEach((model) => {
-				if (utils.isProperGeo(model.countries, model.name)) {
+				if (adEngine.utils.isProperGeo(model.countries, model.name)) {
 					model.executable = isNextModelExecutable;
 					isNextModelExecutable = false;
 					models.push(model);

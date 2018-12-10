@@ -1,4 +1,4 @@
-import { utils } from '@wikia/ad-engine';
+import * as adEngine from '@wikia/ad-engine';
 
 const logGroup = 'executor';
 
@@ -6,9 +6,7 @@ const logGroup = 'executor';
  * Bill the Lizard methods executor
  */
 export class Executor {
-	constructor() {
-		this.methods = {};
-	}
+    methods: Object = {};
 
 	/**
 	 * Registeres new method
@@ -16,7 +14,7 @@ export class Executor {
 	 * @param {function} callback
 	 */
 	register(name, callback) {
-		utils.logger(logGroup, `method ${name} registered`);
+		adEngine.utils.logger(logGroup, `method ${name} registered`);
 		this.methods[name] = callback;
 	}
 
@@ -33,7 +31,7 @@ export class Executor {
 			throw Error(`${methodName} is not executable`);
 		}
 
-		utils.logger(logGroup, `executing ${methodName} method`, model.name, prediction);
+		adEngine.utils.logger(logGroup, `executing ${methodName} method`, model.name, prediction);
 		callback(model, prediction);
 	}
 
