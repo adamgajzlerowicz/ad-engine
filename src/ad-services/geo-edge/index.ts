@@ -1,4 +1,4 @@
-import * as adEngine from '@wikia/ad-engine';
+import { context, utils } from '@wikia/ad-engine';
 
 interface MyWindow extends Window{
     grumi?: any,
@@ -16,7 +16,7 @@ const scriptDomainId = 'd3b02estmut877';
 function loadScript() {
 	const geoEdgeLibraryUrl = `//${scriptDomainId}.cloudfront.net/grumi-ip.js`;
 
-	return adEngine.utils.scriptLoader.loadScript(geoEdgeLibraryUrl, 'text/javascript', true, 'first');
+	return utils.scriptLoader.loadScript(geoEdgeLibraryUrl, 'text/javascript', true, 'first');
 }
 
 /**
@@ -28,23 +28,23 @@ class GeoEdge {
 	 * @returns {Promise}
 	 */
 	call() {
-		const geoEdgeKey = adEngine.context.get('services.geoEdge.id');
-		const geoEdgeConfig = adEngine.context.get('services.geoEdge.config');
+		const geoEdgeKey = context.get('services.geoEdge.id');
+		const geoEdgeConfig = context.get('services.geoEdge.config');
 
-		if (!adEngine.context.get('services.geoEdge.enabled') || !geoEdgeKey) {
-			adEngine.utils.logger(logGroup, 'disabled');
+		if (!context.get('services.geoEdge.enabled') || !geoEdgeKey) {
+			utils.logger(logGroup, 'disabled');
 
 			return Promise.resolve();
 		}
 
-		adEngine.utils.logger(logGroup, 'loading');
+		utils.logger(logGroup, 'loading');
 		window.grumi = {
 			cfg: geoEdgeConfig,
 			key: geoEdgeKey
 		};
 
 		return loadScript().then(() => {
-			adEngine.utils.logger(logGroup, 'ready');
+			utils.logger(logGroup, 'ready');
 		});
 	}
 }

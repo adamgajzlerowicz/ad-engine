@@ -1,4 +1,4 @@
-import * as adEngine from '@wikia/ad-engine';
+import { utils } from '@wikia/ad-engine';
 
 const logGroup = 'executor';
 
@@ -14,7 +14,7 @@ export class Executor {
 	 * @param {function} callback
 	 */
 	register(name, callback) {
-		adEngine.utils.logger(logGroup, `method ${name} registered`);
+		utils.logger(logGroup, `method ${name} registered`);
 		this.methods[name] = callback;
 	}
 
@@ -31,7 +31,7 @@ export class Executor {
 			throw Error(`${methodName} is not executable`);
 		}
 
-		adEngine.utils.logger(logGroup, `executing ${methodName} method`, model.name, prediction);
+		utils.logger(logGroup, `executing ${methodName} method`, model.name, prediction);
 		callback(model, prediction);
 	}
 

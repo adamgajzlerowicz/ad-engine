@@ -1,4 +1,4 @@
-import * as adEngine from '@wikia/ad-engine';
+import { context, events, utils } from '@wikia/ad-engine';
 import { Executor } from './executor';
 import { ProjectsHandler } from './projects-handler';
 
@@ -19,8 +19,8 @@ import { ProjectsHandler } from './projects-handler';
 
 const logGroup = 'bill-the-lizard';
 
-adEngine.events.registerEvent('BILL_THE_LIZARD_REQUEST');
-adEngine.events.registerEvent('BILL_THE_LIZARD_RESPONSE');
+events.registerEvent('BILL_THE_LIZARD_REQUEST');
+events.registerEvent('BILL_THE_LIZARD_RESPONSE');
 
 /**
  * Builds query parameters for url
@@ -62,7 +62,7 @@ function httpRequest(host, endpoint, queryParameters = {}, timeout = 0, callId) 
 	const query = buildQueryUrl(queryParameters);
 	const url = buildUrl(host, endpoint, query);
 
-	adEngine.events.emit(adEngine.events.BILL_THE_LIZARD_REQUEST, {
+	events.emit(events.BILL_THE_LIZARD_REQUEST, {
 		query,
 		callId,
 	});
@@ -71,20 +71,20 @@ function httpRequest(host, endpoint, queryParameters = {}, timeout = 0, callId) 
 	request.responseType = 'json';
 	request.timeout = timeout;
 
-	adEngine.utils.logger(logGroup, 'timeout configured to', request.timeout);
+	utils.logger(logGroup, 'timeout configured to', request.timeout);
 
 	return new Promise((resolve, reject) => {
 		request.addEventListener('timeout', () => {
 			reject(new Error('timeout'));
-			adEngine.utils.logger(logGroup, 'timed out');
+			utils.logger(logGroup, 'timed out');
 		});
 		request.addEventListener('error', () => {
 			reject(new Error('error'));
-			adEngine.utils.logger(logGroup, 'errored');
+			utils.logger(logGroup, 'errored');
 		});
 		request.onreadystatechange = function () {
 			if (this.readyState === 4 && this.status === 200) {
-				adEngine.utils.logger(logGroup, 'has response');
+				utils.logger(logGroup, 'has response');
 				resolve(this.response);
 			}
 		};
@@ -116,7 +116,7 @@ function getQueryParameters(models, parameters) {
  */
 function overridePredictions(response) {
 	Object.keys(response).forEach((name) => {
-		const newValue = adEngine.utils.queryString.get(`bill.${name}`);
+		const newValue = utils.queryString.get(`bill.${name}`);
 
 		if (newValue) {
 			response[name].result = parseInt(newValue, 10);
@@ -138,10 +138,10 @@ export class BillTheLizard {
 
 	executor: Executor = new Executor();
     statuses: any = {};
-    projectsHandler: ProjectsHandler;
+    projectsHandler: ProjectsHandler = new ProjectsHandler();
     predictions: any[] = [];
     callCounter = 0;
-    targetedModelNames: Set<string>;
+    targetedModelNames = new Set<string>();
 
 	/**
 	 * Requests service, executes defined methods and parses response
@@ -155,8 +155,8 @@ export class BillTheLizard {
 	 * @returns {Promise}
 	 */
 	call(projectNames, callId) {
-		if (!adEngine.context.get('services.billTheLizard.enabled')) {
-			adEngine.utils.logger(logGroup, 'disabled');
+		if (!context.get('services.billTheLizard.enabled')) {
+			utils.logger(logGroup, 'disabled');
 			return new Promise((resolve, reject) => reject(new Error('Disabled')));
 		}
 
@@ -165,13 +165,13 @@ export class BillTheLizard {
 			callId = this.callCounter;
 		}
 
-		const host = adEngine.context.get('services.billTheLizard.host');
-		const endpoint = adEngine.context.get('services.billTheLizard.endpoint');
-		const timeout = adEngine.context.get('services.billTheLizard.timeout');
+		const host = context.get('services.billTheLizard.host');
+		const endpoint = context.get('services.billTheLizard.endpoint');
+		const timeout = context.get('services.billTheLizard.timeout');
 		const { models, parameters } = this.projectsHandler.getEnabledModelsWithParams(projectNames);
 
 		if (!models || models.length < 1) {
-			adEngine.utils.logger(logGroup, 'no models to predict');
+			utils.logger(logGroup, 'no models to predict');
 			this.statuses[callId] = BillTheLizard.NOT_USED;
 
 			return Promise.resolve({});
@@ -183,7 +183,7 @@ export class BillTheLizard {
 			.forEach(model => this.targetedModelNames.add(model.name));
 
 		const queryParameters = getQueryParameters(models, parameters);
-		adEngine.utils.logger(logGroup, 'calling service', host, endpoint, queryParameters, `callId: ${callId}`);
+		utils.logger(logGroup, 'calling service', host, endpoint, queryParameters, `callId: ${callId}`);
 
 		this.statuses[callId] = BillTheLizard.TOO_LATE;
 
@@ -198,19 +198,19 @@ export class BillTheLizard {
 			})
 			.then(response => overridePredictions(response))
 			.then((response) => {
-				adEngine.utils.logger(logGroup, 'service response OK', `callId: ${callId}`);
+				utils.logger(logGroup, 'service response OK', `callId: ${callId}`);
 
 				this.statuses[callId] = BillTheLizard.ON_TIME;
 
 				const modelToResultMap = this.getModelToResultMap(response);
-				adEngine.utils.logger(logGroup, 'predictions', modelToResultMap, `callId: ${callId}`);
+				utils.logger(logGroup, 'predictions', modelToResultMap, `callId: ${callId}`);
 
 				const predictions = this.buildPredictions(models, modelToResultMap, callId);
 				this.predictions.push(...predictions);
 
 				this.setTargeting();
 
-				adEngine.events.emit(adEngine.events.BILL_THE_LIZARD_RESPONSE, {
+				events.emit(events.BILL_THE_LIZARD_RESPONSE, {
 					callId,
 					response: this.serialize(callId),
 				});
@@ -220,7 +220,7 @@ export class BillTheLizard {
 				return modelToResultMap;
 			})
 			.catch((error) => {
-				adEngine.utils.logger(logGroup, 'service response', error.message, `callId: ${callId}`);
+				utils.logger(logGroup, 'service response', error.message, `callId: ${callId}`);
 				return {};
 			});
 	}
@@ -257,7 +257,7 @@ export class BillTheLizard {
 	}
 
 	/**
-	 * Sets DFP targeting in adEngine.context.
+	 * Sets DFP targeting in context.
 	 *
 	 * @returns string
 	 */
@@ -266,7 +266,7 @@ export class BillTheLizard {
 		if (Object.keys(targeting).length > 0) {
 			const serializedTargeting = Object.entries(targeting)
 				.map(([modelName, result]) => `${modelName}_${result}`);
-			adEngine.context.set('targeting.btl', serializedTargeting);
+			context.set('targeting.btl', serializedTargeting);
 			return serializedTargeting;
 		}
 		return '';

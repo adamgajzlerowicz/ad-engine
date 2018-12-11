@@ -1,6 +1,10 @@
 import { AdEngine, context, events, utils } from '@wikia/ad-engine';
-import { billTheLizard } from '@wikia/ad-services';
 import adContext from '../../context';
+
+const ser = require('@wikia/ad-services');
+
+const billTheLizard = ser.billTheLizard;
+
 
 const allPredictionsElement = document.getElementById('predictions-all');
 const allStatusesElement = document.getElementById('status-all');

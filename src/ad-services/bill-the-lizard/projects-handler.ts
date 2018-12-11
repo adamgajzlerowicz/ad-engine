@@ -1,4 +1,4 @@
-import * as adEngine from '@wikia/ad-engine';
+import { context, utils } from '@wikia/ad-engine';
 
 const logGroup = 'project-handler';
 
@@ -13,7 +13,7 @@ export class ProjectsHandler {
 	 * @param {string} name
 	 */
 	enable(name) {
-		adEngine.utils.logger(logGroup, `project ${name} enabled`);
+		utils.logger(logGroup, `project ${name} enabled`);
 		this.projects[name] = true;
 	}
 
@@ -32,8 +32,8 @@ export class ProjectsHandler {
 	 * @returns {{models: ModelDefinition[], parameters: Object}}
 	 */
 	getEnabledModelsWithParams(projectNames) {
-		const projects = adEngine.context.get('services.billTheLizard.projects');
-		const projectParameters = adEngine.context.get('services.billTheLizard.parameters');
+		const projects = context.get('services.billTheLizard.projects');
+		const projectParameters = context.get('services.billTheLizard.parameters');
 		const enabledProjectNames = Object.keys(projects)
 			.filter(name => (this.isEnabled(name) && projectNames.includes(name)));
 		const models = [];
@@ -44,7 +44,7 @@ export class ProjectsHandler {
 			let isNextModelExecutable = true;
 
 			projects[name].forEach((model) => {
-				if (adEngine.utils.isProperGeo(model.countries, model.name)) {
+				if (utils.isProperGeo(model.countries, model.name)) {
 					model.executable = isNextModelExecutable;
 					isNextModelExecutable = false;
 					models.push(model);

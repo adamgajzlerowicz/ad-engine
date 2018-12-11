@@ -1,4 +1,4 @@
-import * as adEngine from '@wikia/ad-engine';
+import { context, events, utils } from '@wikia/ad-engine';
 
 interface MyWindow extends Window{
     moatPrebidApi?: any;
@@ -7,19 +7,20 @@ interface MyWindow extends Window{
 declare var window: MyWindow;
 
 
+
 const logGroup = 'moat-yi';
 
-adEngine.events.registerEvent('MOAT_YI_READY');
+events.registerEvent('MOAT_YI_READY');
 
 /**
  * Injects MOAT YI script
  * @returns {Promise}
  */
 function loadScript() {
-	const partnerCode = adEngine.context.get('services.moatYi.partnerCode');
+	const partnerCode = context.get('services.moatYi.partnerCode');
 	const url = `//z.moatads.com/${partnerCode}/yi.js`;
 
-	return adEngine.utils.scriptLoader.loadScript(url, 'text/javascript', true, 'first');
+	return utils.scriptLoader.loadScript(url, 'text/javascript', true, 'first');
 }
 
 /**
@@ -31,8 +32,8 @@ class MoatYi {
 	 * @returns {Promise}
 	 */
 	call() {
-		if (!adEngine.context.get('services.moatYi.enabled') || !adEngine.context.get('services.moatYi.partnerCode')) {
-			adEngine.utils.logger(logGroup, 'disabled');
+		if (!context.get('services.moatYi.enabled') || !context.get('services.moatYi.partnerCode')) {
+			utils.logger(logGroup, 'disabled');
 			return Promise.resolve();
 		}
 
@@ -40,15 +41,15 @@ class MoatYi {
 		const promise = new Promise((resolve) => {
 			moatYeildReadyResolve = resolve;
 		});
-		adEngine.utils.logger(logGroup, 'loading');
+		utils.logger(logGroup, 'loading');
 		window.moatYieldReady = () => {
 			this.importPageParams();
 			moatYeildReadyResolve();
 		};
-		adEngine.context.set('targeting.m_data', 'waiting');
+		context.set('targeting.m_data', 'waiting');
 
 		loadScript().then(() => {
-			adEngine.utils.logger(logGroup, 'ready');
+			utils.logger(logGroup, 'ready');
 		});
 
 		return promise;
@@ -62,9 +63,9 @@ class MoatYi {
 		if (window.moatPrebidApi && typeof window.moatPrebidApi.getMoatTargetingForPage === 'function') {
 			const pageParams = window.moatPrebidApi.getMoatTargetingForPage() || {};
 
-			adEngine.context.set('targeting.m_data', pageParams.m_data);
-			adEngine.events.emit(adEngine.events.MOAT_YI_READY, `m_data=${pageParams.m_data}`);
-			adEngine.utils.logger(logGroup, 'moatYieldReady', pageParams);
+			context.set('targeting.m_data', pageParams.m_data);
+			events.emit(events.MOAT_YI_READY, `m_data=${pageParams.m_data}`);
+			utils.logger(logGroup, 'moatYieldReady', pageParams);
 		}
 	}
 }
